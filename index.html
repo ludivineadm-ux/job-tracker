@@ -183,6 +183,12 @@
   .suggestions-table-wrap {
     margin-top: 20px;
   }
+  .actions-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: flex-start;
+  }
 </style>
 </head>
 <body>
@@ -534,7 +540,10 @@
         <td>${escapeHtml(sug.position)}</td>
         <td class="link-cell">${linkCell}</td>
         <td class="notes-cell">${escapeHtml(sug.notes || '')}</td>
-        <td><button class="btn-add" data-id="${sug.id}">Ajouter au tracker</button></td>
+        <td class="actions-cell">
+          <button class="btn-add" data-id="${sug.id}">Ajouter au tracker</button>
+          <button class="btn-danger" data-id="${sug.id}">Supprimer</button>
+        </td>
       `;
       suggestionsBody.appendChild(tr);
     });
@@ -589,27 +598,38 @@
   });
 
   suggestionsBody.addEventListener('click', (e) => {
-    if (!e.target.classList.contains('btn-add')) return;
     const id = e.target.dataset.id;
-    const suggestions = loadSuggestions();
-    const suggestion = suggestions.find((s) => s.id === id);
-    if (!suggestion) return;
+    if (!id) return;
 
-    const applications = loadApplications();
-    applications.push({
-      id: generateId(),
-      company: suggestion.company,
-      position: suggestion.position,
-      status: 'a-postuler',
-      date: '',
-      notes: suggestion.link
-        ? [suggestion.notes, `Lien: ${suggestion.link}`].filter(Boolean).join('\n')
-        : suggestion.notes || ''
-    });
-    saveApplications(applications);
-    saveSuggestions(suggestions.filter((s) => s.id !== id));
-    render();
-    renderSuggestions();
+    if (e.target.classList.contains('btn-add')) {
+      const suggestions = loadSuggestions();
+      const suggestion = suggestions.find((s) => s.id === id);
+      if (!suggestion) return;
+
+      const applications = loadApplications();
+      applications.push({
+        id: generateId(),
+        company: suggestion.company,
+        position: suggestion.position,
+        status: 'a-postuler',
+        date: '',
+        notes: suggestion.link
+          ? [suggestion.notes, `Lien: ${suggestion.link}`].filter(Boolean).join('\n')
+          : suggestion.notes || ''
+      });
+      saveApplications(applications);
+      saveSuggestions(suggestions.filter((s) => s.id !== id));
+      render();
+      renderSuggestions();
+      return;
+    }
+
+    if (e.target.classList.contains('btn-danger')) {
+      if (!confirm('Supprimer cette suggestion ?')) return;
+      const suggestions = loadSuggestions().filter((s) => s.id !== id);
+      saveSuggestions(suggestions);
+      renderSuggestions();
+    }
   });
 
   tbody.addEventListener('change', (e) => {
