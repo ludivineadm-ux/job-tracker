@@ -599,6 +599,27 @@
     }
   }
 
+  // Backfills fields (like "sector") added to AUTO_SUGGESTIONS after a suggestion was
+  // already seeded, since seeding itself only ever runs once per key. Matches on link,
+  // the most stable identifier for a curated entry.
+  function migrateAutoSuggestions() {
+    const suggestions = loadSuggestions();
+    let changed = false;
+
+    suggestions.forEach((sug) => {
+      if (sug.sector || !sug.link) return;
+      const match = AUTO_SUGGESTIONS.find((item) => item.link === sug.link);
+      if (match && match.sector) {
+        sug.sector = match.sector;
+        changed = true;
+      }
+    });
+
+    if (changed) {
+      saveSuggestions(suggestions);
+    }
+  }
+
   function escapeHtml(str) {
     const div = document.createElement('div');
     div.textContent = str;
@@ -890,6 +911,7 @@
   hideRejectedCheckbox.checked = initialFilters.hideRejected;
 
   seedAutoSuggestions();
+  migrateAutoSuggestions();
   render();
   renderSuggestions();
 </script>
