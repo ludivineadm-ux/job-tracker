@@ -165,6 +165,24 @@
     color: var(--text-muted);
     font-size: 0.9rem;
   }
+  .btn-add {
+    background: #f0fdf4;
+    color: #15803d;
+    border: 1px solid #86efac;
+    padding: 5px 10px;
+    font-size: 0.8rem;
+  }
+  .btn-add:hover {
+    background: #15803d;
+    color: #fff;
+    border-color: #15803d;
+  }
+  td.link-cell a {
+    color: var(--accent);
+  }
+  .suggestions-table-wrap {
+    margin-top: 20px;
+  }
 </style>
 </head>
 <body>
@@ -208,6 +226,47 @@
   </div>
 
   <div class="card">
+    <h2>Suggestions <span class="count-badge" id="suggestions-count-badge"></span></h2>
+    <form id="suggestion-form">
+      <div class="field">
+        <label for="s-company">Entreprise</label>
+        <input type="text" id="s-company" required placeholder="Ex: Acme Corp">
+      </div>
+      <div class="field">
+        <label for="s-position">Poste</label>
+        <input type="text" id="s-position" required placeholder="Ex: Développeur web">
+      </div>
+      <div class="field">
+        <label for="s-link">Lien</label>
+        <input type="url" id="s-link" placeholder="https://...">
+      </div>
+      <div class="field full">
+        <label for="s-notes">Notes</label>
+        <textarea id="s-notes" placeholder="Pourquoi ça t'intéresse, source..."></textarea>
+      </div>
+      <div class="field">
+        <button type="submit" class="btn-primary">Ajouter la suggestion</button>
+      </div>
+    </form>
+
+    <div class="table-wrap suggestions-table-wrap">
+      <table id="suggestions-table">
+        <thead>
+          <tr>
+            <th>Entreprise</th>
+            <th>Poste</th>
+            <th>Lien</th>
+            <th>Notes</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="suggestions-body"></tbody>
+      </table>
+      <div class="empty-state" id="suggestions-empty-state">Aucune suggestion pour le moment.</div>
+    </div>
+  </div>
+
+  <div class="card">
     <h2>Mes candidatures <span class="count-badge" id="count-badge"></span></h2>
     <div class="table-wrap">
       <table id="applications-table">
@@ -230,6 +289,7 @@
 
 <script>
   const STORAGE_KEY = 'jobApplications';
+  const SUGGESTIONS_KEY = 'jobSuggestions';
   const STATUS_LABELS = {
     'a-postuler': 'À postuler',
     'postule': 'Postulé',
@@ -243,6 +303,15 @@
   const emptyState = document.getElementById('empty-state');
   const countBadge = document.getElementById('count-badge');
 
+  const suggestionForm = document.getElementById('suggestion-form');
+  const suggestionsBody = document.getElementById('suggestions-body');
+  const suggestionsEmptyState = document.getElementById('suggestions-empty-state');
+  const suggestionsCountBadge = document.getElementById('suggestions-count-badge');
+
+  function generateId() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  }
+
   function loadApplications() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -254,6 +323,19 @@
 
   function saveApplications(applications) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(applications));
+  }
+
+  function loadSuggestions() {
+    try {
+      const raw = localStorage.getItem(SUGGESTIONS_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveSuggestions(suggestions) {
+    localStorage.setItem(SUGGESTIONS_KEY, JSON.stringify(suggestions));
   }
 
   function escapeHtml(str) {
@@ -306,6 +388,30 @@
       });
   }
 
+  function renderSuggestions() {
+    const suggestions = loadSuggestions();
+    suggestionsBody.innerHTML = '';
+
+    suggestionsEmptyState.style.display = suggestions.length === 0 ? 'block' : 'none';
+    suggestionsCountBadge.textContent = suggestions.length ? `(${suggestions.length})` : '';
+
+    suggestions.forEach((sug) => {
+      const tr = document.createElement('tr');
+      const linkCell = sug.link
+        ? `<a href="${escapeHtml(sug.link)}" target="_blank" rel="noopener noreferrer">${escapeHtml(sug.link)}</a>`
+        : '';
+
+      tr.innerHTML = `
+        <td>${escapeHtml(sug.company)}</td>
+        <td>${escapeHtml(sug.position)}</td>
+        <td class="link-cell">${linkCell}</td>
+        <td class="notes-cell">${escapeHtml(sug.notes || '')}</td>
+        <td><button class="btn-add" data-id="${sug.id}">Ajouter au tracker</button></td>
+      `;
+      suggestionsBody.appendChild(tr);
+    });
+  }
+
   form.addEventListener('submit', (e) => {
     e.preventDefault();
 
@@ -319,7 +425,7 @@
 
     const applications = loadApplications();
     applications.push({
-      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+      id: generateId(),
       company,
       position,
       status,
@@ -329,6 +435,53 @@
     saveApplications(applications);
     form.reset();
     render();
+  });
+
+  suggestionForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    const company = document.getElementById('s-company').value.trim();
+    const position = document.getElementById('s-position').value.trim();
+    const link = document.getElementById('s-link').value.trim();
+    const notes = document.getElementById('s-notes').value.trim();
+
+    if (!company || !position) return;
+
+    const suggestions = loadSuggestions();
+    suggestions.push({
+      id: generateId(),
+      company,
+      position,
+      link,
+      notes
+    });
+    saveSuggestions(suggestions);
+    suggestionForm.reset();
+    renderSuggestions();
+  });
+
+  suggestionsBody.addEventListener('click', (e) => {
+    if (!e.target.classList.contains('btn-add')) return;
+    const id = e.target.dataset.id;
+    const suggestions = loadSuggestions();
+    const suggestion = suggestions.find((s) => s.id === id);
+    if (!suggestion) return;
+
+    const applications = loadApplications();
+    applications.push({
+      id: generateId(),
+      company: suggestion.company,
+      position: suggestion.position,
+      status: 'a-postuler',
+      date: '',
+      notes: suggestion.link
+        ? [suggestion.notes, `Lien: ${suggestion.link}`].filter(Boolean).join('\n')
+        : suggestion.notes || ''
+    });
+    saveApplications(applications);
+    saveSuggestions(suggestions.filter((s) => s.id !== id));
+    render();
+    renderSuggestions();
   });
 
   tbody.addEventListener('change', (e) => {
@@ -354,6 +507,7 @@
   });
 
   render();
+  renderSuggestions();
 </script>
 </body>
 </html>
