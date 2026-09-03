@@ -180,9 +180,6 @@
   td.link-cell a {
     color: var(--accent);
   }
-  .suggestions-table-wrap {
-    margin-top: 20px;
-  }
   .actions-cell {
     display: flex;
     flex-direction: column;
@@ -247,6 +244,24 @@
     background: #fff;
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
   }
+  .add-row td {
+    background: #fafbfc;
+  }
+  .add-row .text-input {
+    width: 100%;
+    font-size: 0.85rem;
+    padding: 6px 8px;
+  }
+  .btn-add-row {
+    background: var(--accent);
+    color: #fff;
+    padding: 6px 12px;
+    font-size: 0.82rem;
+    white-space: nowrap;
+  }
+  .btn-add-row:hover {
+    background: var(--accent-hover);
+  }
 </style>
 </head>
 <body>
@@ -255,65 +270,8 @@
   <p class="subtitle">Ajoute et suis l'état de tes candidatures d'emploi. Les données sont sauvegardées localement dans ton navigateur.</p>
 
   <div class="card">
-    <h2>Ajouter une candidature</h2>
-    <form id="application-form">
-      <div class="field">
-        <label for="company">Entreprise</label>
-        <input type="text" id="company" required placeholder="Ex: Acme Corp">
-      </div>
-      <div class="field">
-        <label for="position">Poste</label>
-        <input type="text" id="position" required placeholder="Ex: Développeur web">
-      </div>
-      <div class="field">
-        <label for="status">Statut</label>
-        <select id="status">
-          <option value="a-postuler">À postuler</option>
-          <option value="postule">Postulé</option>
-          <option value="entretien">Entretien</option>
-          <option value="refuse">Refusé</option>
-          <option value="offre">Offre</option>
-        </select>
-      </div>
-      <div class="field">
-        <label for="date">Date</label>
-        <input type="date" id="date">
-      </div>
-      <div class="field full">
-        <label for="notes">Notes</label>
-        <textarea id="notes" placeholder="Contact, lien de l'offre, suivi..."></textarea>
-      </div>
-      <div class="field">
-        <button type="submit" class="btn-primary">Ajouter la candidature</button>
-      </div>
-    </form>
-  </div>
-
-  <div class="card">
     <h2>Suggestions <span class="count-badge" id="suggestions-count-badge"></span></h2>
-    <form id="suggestion-form">
-      <div class="field">
-        <label for="s-company">Entreprise</label>
-        <input type="text" id="s-company" required placeholder="Ex: Acme Corp">
-      </div>
-      <div class="field">
-        <label for="s-position">Poste</label>
-        <input type="text" id="s-position" required placeholder="Ex: Développeur web">
-      </div>
-      <div class="field">
-        <label for="s-link">Lien</label>
-        <input type="url" id="s-link" placeholder="https://...">
-      </div>
-      <div class="field full">
-        <label for="s-notes">Notes</label>
-        <textarea id="s-notes" placeholder="Pourquoi ça t'intéresse, source..."></textarea>
-      </div>
-      <div class="field">
-        <button type="submit" class="btn-primary">Ajouter la suggestion</button>
-      </div>
-    </form>
-
-    <div class="table-wrap suggestions-table-wrap">
+    <div class="table-wrap">
       <table id="suggestions-table">
         <thead>
           <tr>
@@ -478,14 +436,12 @@
     'offre': 'Offre'
   };
 
-  const form = document.getElementById('application-form');
   const tbody = document.getElementById('applications-body');
   const emptyState = document.getElementById('empty-state');
   const countBadge = document.getElementById('count-badge');
   const statusFilterSelect = document.getElementById('status-filter');
   const hideRejectedCheckbox = document.getElementById('hide-rejected');
 
-  const suggestionForm = document.getElementById('suggestion-form');
   const suggestionsBody = document.getElementById('suggestions-body');
   const suggestionsEmptyState = document.getElementById('suggestions-empty-state');
   const suggestionsCountBadge = document.getElementById('suggestions-count-badge');
@@ -581,7 +537,24 @@
       filtered = filtered.filter((a) => a.status !== 'refuse');
     }
 
-    tbody.innerHTML = '';
+    const addRowStatusOptions = Object.entries(STATUS_LABELS)
+      .map(([value, label]) => `<option value="${value}" ${value === 'a-postuler' ? 'selected' : ''}>${label}</option>`)
+      .join('');
+
+    tbody.innerHTML = `
+      <tr class="add-row">
+        <td><input type="text" id="new-company" class="text-input" placeholder="Entreprise"></td>
+        <td><input type="text" id="new-position" class="text-input" placeholder="Poste"></td>
+        <td>
+          <select id="new-status" class="status-select status-a-postuler">
+            ${addRowStatusOptions}
+          </select>
+        </td>
+        <td><input type="date" id="new-date" class="date-input"></td>
+        <td><textarea id="new-notes" class="notes-input" rows="2" placeholder="Notes"></textarea></td>
+        <td><button id="add-application-btn" class="btn-add-row">Ajouter</button></td>
+      </tr>
+    `;
 
     const hasApplications = applications.length > 0;
     const hasVisibleApplications = filtered.length > 0;
@@ -647,16 +620,24 @@
     });
   }
 
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
+  function addApplicationFromRow() {
+    const companyInput = document.getElementById('new-company');
+    const positionInput = document.getElementById('new-position');
+    const company = companyInput.value.trim();
+    const position = positionInput.value.trim();
 
-    const company = document.getElementById('company').value.trim();
-    const position = document.getElementById('position').value.trim();
-    const status = document.getElementById('status').value;
-    const date = document.getElementById('date').value;
-    const notes = document.getElementById('notes').value.trim();
+    if (!company) {
+      companyInput.focus();
+      return;
+    }
+    if (!position) {
+      positionInput.focus();
+      return;
+    }
 
-    if (!company || !position) return;
+    const status = document.getElementById('new-status').value;
+    const date = document.getElementById('new-date').value;
+    const notes = document.getElementById('new-notes').value.trim();
 
     const applications = loadApplications();
     applications.push({
@@ -668,32 +649,8 @@
       notes
     });
     saveApplications(applications);
-    form.reset();
     render();
-  });
-
-  suggestionForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-
-    const company = document.getElementById('s-company').value.trim();
-    const position = document.getElementById('s-position').value.trim();
-    const link = document.getElementById('s-link').value.trim();
-    const notes = document.getElementById('s-notes').value.trim();
-
-    if (!company || !position) return;
-
-    const suggestions = loadSuggestions();
-    suggestions.push({
-      id: generateId(),
-      company,
-      position,
-      link,
-      notes
-    });
-    saveSuggestions(suggestions);
-    suggestionForm.reset();
-    renderSuggestions();
-  });
+  }
 
   suggestionsBody.addEventListener('click', (e) => {
     const id = e.target.dataset.id;
@@ -753,12 +710,24 @@
   });
 
   tbody.addEventListener('click', (e) => {
+    if (e.target.id === 'add-application-btn') {
+      addApplicationFromRow();
+      return;
+    }
+
     if (!e.target.classList.contains('btn-danger')) return;
     const id = e.target.dataset.id;
     if (!confirm('Supprimer cette candidature ?')) return;
     const applications = loadApplications().filter((a) => a.id !== id);
     saveApplications(applications);
     render();
+  });
+
+  tbody.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    if (e.target.id !== 'new-company' && e.target.id !== 'new-position') return;
+    e.preventDefault();
+    addApplicationFromRow();
   });
 
   statusFilterSelect.addEventListener('change', () => {
