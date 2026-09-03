@@ -290,6 +290,76 @@
 <script>
   const STORAGE_KEY = 'jobApplications';
   const SUGGESTIONS_KEY = 'jobSuggestions';
+  const AUTO_SUGGESTIONS_SEEN_KEY = 'jobAutoSuggestionsSeen';
+
+  // Curated automatically once per browser (see seedAutoSuggestions). Each "key" must
+  // stay stable so a suggestion isn't re-added after being moved to the tracker or deleted.
+  const AUTO_SUGGESTIONS = [
+    {
+      key: 'entico-transformation-project-manager-2026',
+      company: 'Entico',
+      position: 'Transformation Project Manager',
+      link: 'https://to.indeed.com/aa7w6n79yr2j',
+      notes: "Intitulé qui correspond exactement à un profil de PM transversal business/IT. Société de conseil, poste généraliste."
+    },
+    {
+      key: 'axa-business-analyst-pm-healthcare-2026',
+      company: 'AXA',
+      position: 'Business Analyst / Project Manager, Healthcare',
+      link: 'https://to.indeed.com/aacqbxpvz84b',
+      notes: "Rôle hybride Business Analyst / Project Manager, dans le secteur assurance (accepté dans tes critères) et proche d'une expérience de gestion de projets pour des institutions financières."
+    },
+    {
+      key: 'nn-group-business-analyst-2026',
+      company: 'NN Group',
+      position: 'Business Analyst',
+      link: 'https://to.indeed.com/aafqg9fcwpx7',
+      notes: "Assureur (secteur accepté). Poste de Business Analyst orienté traduction de besoins métier en spécifications techniques, un exercice central du profil business/IT."
+    },
+    {
+      key: 'aisin-europe-sustainability-regulatory-pm-2026',
+      company: 'Aisin Europe',
+      position: 'Sustainability & Regulatory Compliance Project Manager',
+      link: 'https://to.indeed.com/aajm4zkp9snw',
+      notes: "Combine gestion de projet, cadre réglementaire ESG et sustainability. Probablement le poste le plus aligné avec une préférence pour un impact positif."
+    },
+    {
+      key: 'seidor-pm-learning-ai-digital-transformation-2026',
+      company: 'SEIDOR',
+      position: 'Project Manager (Learning, AI & Digital Transformation)',
+      link: 'https://to.indeed.com/aa7tx4msmsr7',
+      notes: "PM sur la transformation digitale et l'IA, en écho à un intérêt confirmé pour les sujets IA (formations Claude / Copilot Studio) côté produit."
+    },
+    {
+      key: 'fedex-digital-transformation-business-analyst-2026',
+      company: 'FedEx',
+      position: 'Digital Transformation Business Analyst',
+      link: 'https://to.indeed.com/aadttdxq4l74',
+      notes: "Business Analyst sur la transformation digitale : specs techniques, intégration de systèmes d'entreprise, suivi de projet end-to-end."
+    },
+    {
+      key: 'ey-senior-pmo-financial-services-2026',
+      company: 'EY',
+      position: 'Senior project management officer - Financial Services',
+      link: 'https://to.indeed.com/aa6kxhsq2wxz',
+      notes: "PMO en Financial Services dans un grand cabinet de conseil, secteur bancaire/finance (accepté dans tes critères) avec forte dimension coordination de parties prenantes."
+    },
+    {
+      key: 'projective-group-it-integration-manager-fs-2026',
+      company: 'Projective Group',
+      position: 'IT Integration Manager – Financial Services',
+      link: 'https://to.indeed.com/aat4xtzvd6dx',
+      notes: "Cabinet spécialisé banque/assurance. Rôle d'intégration IT (type Salesforce/SAP) appliqué au secteur financier, à l'intersection business/IT."
+    },
+    {
+      key: 'engie-project-portfolio-manager-2026',
+      company: 'ENGIE',
+      position: 'Project Portfolio Manager Doel & Corp',
+      link: 'https://to.indeed.com/aafljdhrf8dp',
+      notes: "Grand groupe énergétique avec une forte dimension transition énergétique. Gestion de portefeuille de projets à impact, dans la lignée d'un intérêt pour les projets à impact positif (ex: bornes de recharge)."
+    }
+  ];
+
   const STATUS_LABELS = {
     'a-postuler': 'À postuler',
     'postule': 'Postulé',
@@ -336,6 +406,36 @@
 
   function saveSuggestions(suggestions) {
     localStorage.setItem(SUGGESTIONS_KEY, JSON.stringify(suggestions));
+  }
+
+  function seedAutoSuggestions() {
+    let seen;
+    try {
+      seen = JSON.parse(localStorage.getItem(AUTO_SUGGESTIONS_SEEN_KEY) || '[]');
+    } catch (e) {
+      seen = [];
+    }
+
+    const suggestions = loadSuggestions();
+    let changed = false;
+
+    AUTO_SUGGESTIONS.forEach((item) => {
+      if (seen.includes(item.key)) return;
+      suggestions.push({
+        id: generateId(),
+        company: item.company,
+        position: item.position,
+        link: item.link,
+        notes: item.notes
+      });
+      seen.push(item.key);
+      changed = true;
+    });
+
+    if (changed) {
+      saveSuggestions(suggestions);
+      localStorage.setItem(AUTO_SUGGESTIONS_SEEN_KEY, JSON.stringify(seen));
+    }
   }
 
   function escapeHtml(str) {
@@ -506,6 +606,7 @@
     render();
   });
 
+  seedAutoSuggestions();
   render();
   renderSuggestions();
 </script>
