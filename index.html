@@ -189,6 +189,64 @@
     gap: 6px;
     align-items: flex-start;
   }
+  .filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .filter-bar .field {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+  }
+  .filter-bar label {
+    white-space: nowrap;
+  }
+  .filter-bar select {
+    width: auto;
+  }
+  .checkbox-field {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .checkbox-field input {
+    width: auto;
+    cursor: pointer;
+  }
+  .notes-input, .date-input {
+    border: 1px solid transparent;
+    background: transparent;
+    font-family: inherit;
+    color: var(--text);
+    padding: 4px 6px;
+    border-radius: 4px;
+    width: 100%;
+  }
+  .notes-input {
+    resize: vertical;
+    min-height: 36px;
+    font-size: 0.85rem;
+  }
+  .date-input {
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+  .notes-input:hover, .date-input:hover {
+    border-color: var(--border);
+  }
+  .notes-input:focus, .date-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  }
 </style>
 </head>
 <body>
@@ -274,6 +332,23 @@
 
   <div class="card">
     <h2>Mes candidatures <span class="count-badge" id="count-badge"></span></h2>
+    <div class="filter-bar">
+      <div class="field">
+        <label for="status-filter">Filtrer par statut</label>
+        <select id="status-filter">
+          <option value="all">Tous les statuts</option>
+          <option value="a-postuler">À postuler</option>
+          <option value="postule">Postulé</option>
+          <option value="entretien">Entretien</option>
+          <option value="refuse">Refusé</option>
+          <option value="offre">Offre</option>
+        </select>
+      </div>
+      <label class="checkbox-field">
+        <input type="checkbox" id="hide-rejected">
+        Masquer les candidatures refusées
+      </label>
+    </div>
     <div class="table-wrap">
       <table id="applications-table">
         <thead>
@@ -297,6 +372,7 @@
   const STORAGE_KEY = 'jobApplications';
   const SUGGESTIONS_KEY = 'jobSuggestions';
   const AUTO_SUGGESTIONS_SEEN_KEY = 'jobAutoSuggestionsSeen';
+  const FILTERS_KEY = 'jobTrackerFilters';
 
   // Curated automatically once per browser (see seedAutoSuggestions). Each "key" must
   // stay stable so a suggestion isn't re-added after being moved to the tracker or deleted.
@@ -406,6 +482,8 @@
   const tbody = document.getElementById('applications-body');
   const emptyState = document.getElementById('empty-state');
   const countBadge = document.getElementById('count-badge');
+  const statusFilterSelect = document.getElementById('status-filter');
+  const hideRejectedCheckbox = document.getElementById('hide-rejected');
 
   const suggestionForm = document.getElementById('suggestion-form');
   const suggestionsBody = document.getElementById('suggestions-body');
@@ -427,6 +505,19 @@
 
   function saveApplications(applications) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(applications));
+  }
+
+  function loadFilters() {
+    try {
+      const raw = localStorage.getItem(FILTERS_KEY);
+      return raw ? JSON.parse(raw) : { status: 'all', hideRejected: false };
+    } catch (e) {
+      return { status: 'all', hideRejected: false };
+    }
+  }
+
+  function saveFilters(filters) {
+    localStorage.setItem(FILTERS_KEY, JSON.stringify(filters));
   }
 
   function loadSuggestions() {
@@ -478,25 +569,32 @@
     return div.innerHTML;
   }
 
-  function formatDate(dateStr) {
-    if (!dateStr) return '';
-    const [year, month, day] = dateStr.split('-');
-    return `${day}/${month}/${year}`;
-  }
-
   function render() {
     const applications = loadApplications();
-    tbody.innerHTML = '';
+    const filters = loadFilters();
 
-    if (applications.length === 0) {
-      emptyState.style.display = 'block';
-    } else {
-      emptyState.style.display = 'none';
+    let filtered = applications;
+    if (filters.status !== 'all') {
+      filtered = filtered.filter((a) => a.status === filters.status);
+    }
+    if (filters.hideRejected) {
+      filtered = filtered.filter((a) => a.status !== 'refuse');
     }
 
-    countBadge.textContent = applications.length ? `(${applications.length})` : '';
+    tbody.innerHTML = '';
 
-    applications
+    const hasApplications = applications.length > 0;
+    const hasVisibleApplications = filtered.length > 0;
+    emptyState.style.display = hasVisibleApplications ? 'none' : 'block';
+    emptyState.textContent = hasApplications && !hasVisibleApplications
+      ? "Aucune candidature ne correspond aux filtres."
+      : "Aucune candidature pour le moment. Ajoute-en une ci-dessus.";
+
+    countBadge.textContent = hasApplications
+      ? (filtered.length === applications.length ? `(${applications.length})` : `(${filtered.length} sur ${applications.length})`)
+      : '';
+
+    filtered
       .slice()
       .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
       .forEach((app) => {
@@ -514,8 +612,8 @@
               ${statusOptions}
             </select>
           </td>
-          <td>${formatDate(app.date)}</td>
-          <td class="notes-cell">${escapeHtml(app.notes || '')}</td>
+          <td><input type="date" class="date-input" data-id="${app.id}" value="${app.date || ''}"></td>
+          <td class="notes-cell"><textarea class="notes-input" data-id="${app.id}" rows="2" placeholder="Ajouter une note...">${escapeHtml(app.notes || '')}</textarea></td>
           <td><button class="btn-danger" data-id="${app.id}">Supprimer</button></td>
         `;
         tbody.appendChild(tr);
@@ -633,16 +731,25 @@
   });
 
   tbody.addEventListener('change', (e) => {
-    if (!e.target.classList.contains('status-select')) return;
     const id = e.target.dataset.id;
-    const newStatus = e.target.value;
+    if (!id) return;
+
     const applications = loadApplications();
     const app = applications.find((a) => a.id === id);
-    if (app) {
-      app.status = newStatus;
-      saveApplications(applications);
-      render();
+    if (!app) return;
+
+    if (e.target.classList.contains('status-select')) {
+      app.status = e.target.value;
+    } else if (e.target.classList.contains('date-input')) {
+      app.date = e.target.value;
+    } else if (e.target.classList.contains('notes-input')) {
+      app.notes = e.target.value.trim();
+    } else {
+      return;
     }
+
+    saveApplications(applications);
+    render();
   });
 
   tbody.addEventListener('click', (e) => {
@@ -653,6 +760,24 @@
     saveApplications(applications);
     render();
   });
+
+  statusFilterSelect.addEventListener('change', () => {
+    const filters = loadFilters();
+    filters.status = statusFilterSelect.value;
+    saveFilters(filters);
+    render();
+  });
+
+  hideRejectedCheckbox.addEventListener('change', () => {
+    const filters = loadFilters();
+    filters.hideRejected = hideRejectedCheckbox.checked;
+    saveFilters(filters);
+    render();
+  });
+
+  const initialFilters = loadFilters();
+  statusFilterSelect.value = initialFilters.status;
+  hideRejectedCheckbox.checked = initialFilters.hideRejected;
 
   seedAutoSuggestions();
   render();
