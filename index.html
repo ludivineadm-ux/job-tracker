@@ -609,10 +609,19 @@
     }
 
     const suggestions = loadSuggestions();
-    let changed = false;
+    const existingLinks = new Set(suggestions.map((s) => s.link).filter(Boolean));
+    let suggestionsChanged = false;
+    let seenChanged = false;
 
     AUTO_SUGGESTIONS.forEach((item) => {
       if (seen.includes(item.key)) return;
+      seen.push(item.key);
+      seenChanged = true;
+
+      // A key can change (e.g. a fixed link, an added flag) while the job's link stays
+      // the same — never add a second row for a link already present in the list.
+      if (item.link && existingLinks.has(item.link)) return;
+
       suggestions.push({
         id: generateId(),
         company: item.company,
@@ -621,13 +630,46 @@
         link: item.link,
         notes: item.notes
       });
-      seen.push(item.key);
-      changed = true;
+      if (item.link) existingLinks.add(item.link);
+      suggestionsChanged = true;
     });
 
-    if (changed) {
+    if (suggestionsChanged) {
       saveSuggestions(suggestions);
+    }
+    if (seenChanged) {
       localStorage.setItem(AUTO_SUGGESTIONS_SEEN_KEY, JSON.stringify(seen));
+    }
+  }
+
+  // Suggestion links that were once fabricated (invented rather than backed by a real
+  // search result) and have since been replaced under a new key. Dropped unconditionally
+  // so a browser that already seeded the bad version never keeps it as a stray duplicate.
+  const RETIRED_SUGGESTION_LINKS = [
+    'https://to.indeed.com/aa6kxhsq2wxz',
+    'https://to.indeed.com/aat4xtzvd6dx',
+    'https://to.indeed.com/aaq2rmzjpqmz',
+    'https://to.indeed.com/aagyvsxlrzv4'
+  ];
+
+  // One-time cleanup for suggestions seeded before de-duplication existed: drops retired
+  // (fabricated-link) entries and collapses any remaining rows that share the same link.
+  function cleanupSuggestions() {
+    let suggestions = loadSuggestions();
+    const originalLength = suggestions.length;
+
+    suggestions = suggestions.filter((sug) => !RETIRED_SUGGESTION_LINKS.includes(sug.link));
+
+    const seenLinks = new Set();
+    suggestions = suggestions.filter((sug) => {
+      if (!sug.link) return true;
+      if (seenLinks.has(sug.link)) return false;
+      seenLinks.add(sug.link);
+      return true;
+    });
+
+    if (suggestions.length !== originalLength) {
+      saveSuggestions(suggestions);
     }
   }
 
@@ -948,6 +990,7 @@
   hideRejectedCheckbox.checked = initialFilters.hideRejected;
 
   seedAutoSuggestions();
+  cleanupSuggestions();
   migrateAutoSuggestions();
   render();
   renderSuggestions();
