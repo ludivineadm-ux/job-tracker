@@ -262,6 +262,46 @@
   .btn-add-row:hover {
     background: var(--accent-hover);
   }
+  .file-cell {
+    white-space: nowrap;
+  }
+  .file-attached {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .file-link {
+    color: var(--accent);
+    max-width: 130px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .btn-remove-file {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    padding: 0 4px;
+    cursor: pointer;
+  }
+  .btn-remove-file:hover {
+    color: var(--danger);
+  }
+  .file-upload-label {
+    display: inline-block;
+    color: var(--accent);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+    padding: 5px 10px;
+  }
+  .file-upload-label:hover {
+    border-color: var(--accent);
+    background: #eef2ff;
+  }
 </style>
 </head>
 <body>
@@ -316,6 +356,8 @@
             <th>Statut</th>
             <th>Date</th>
             <th>Notes</th>
+            <th>CV</th>
+            <th>Lettre de motivation</th>
             <th></th>
           </tr>
         </thead>
@@ -357,11 +399,11 @@
       notes: "Assureur (secteur accepté). Poste de Business Analyst orienté traduction de besoins métier en spécifications techniques, un exercice central du profil business/IT."
     },
     {
-      key: 'aisin-europe-sustainability-regulatory-pm-2026',
+      key: 'aisin-europe-sustainability-regulatory-pm-2026-2',
       company: 'Aisin Europe',
       position: 'Sustainability & Regulatory Compliance Project Manager',
       link: 'https://to.indeed.com/aajm4zkp9snw',
-      notes: "Combine gestion de projet, cadre réglementaire ESG et sustainability. Probablement le poste le plus aligné avec une préférence pour un impact positif."
+      notes: "Combine gestion de projet, cadre réglementaire ESG et sustainability. Probablement le poste le plus aligné avec une préférence pour un impact positif. 📍 Hors Bruxelles intramuros (Braine-l'Alleud)."
     },
     {
       key: 'seidor-pm-learning-ai-digital-transformation-2026',
@@ -371,25 +413,25 @@
       notes: "PM sur la transformation digitale et l'IA, en écho à un intérêt confirmé pour les sujets IA (formations Claude / Copilot Studio) côté produit."
     },
     {
-      key: 'fedex-digital-transformation-business-analyst-2026',
+      key: 'fedex-digital-transformation-business-analyst-2026-2',
       company: 'FedEx',
       position: 'Digital Transformation Business Analyst',
       link: 'https://to.indeed.com/aadttdxq4l74',
-      notes: "Business Analyst sur la transformation digitale : specs techniques, intégration de systèmes d'entreprise, suivi de projet end-to-end."
+      notes: "Business Analyst sur la transformation digitale : specs techniques, intégration de systèmes d'entreprise, suivi de projet end-to-end. 📍 Hors Bruxelles intramuros (Machelen)."
     },
     {
-      key: 'ey-senior-pmo-financial-services-2026',
+      key: 'ey-business-transformation-financial-services-2026',
       company: 'EY',
-      position: 'Senior project management officer - Financial Services',
-      link: 'https://to.indeed.com/aa6kxhsq2wxz',
-      notes: "PMO en Financial Services dans un grand cabinet de conseil, secteur bancaire/finance (accepté dans tes critères) avec forte dimension coordination de parties prenantes."
+      position: 'Senior Consultant Business Transformation - Financial Services',
+      link: 'https://to.indeed.com/aa8pbbc668lq',
+      notes: "Conseil en transformation business dans les services financiers (secteur accepté) chez un grand cabinet — bonne continuité avec un profil business/IT orienté institutions financières. 📍 Hors Bruxelles intramuros (Diegem)."
     },
     {
-      key: 'projective-group-it-integration-manager-fs-2026',
+      key: 'projective-group-functional-analyst-insurance-2026',
       company: 'Projective Group',
-      position: 'IT Integration Manager – Financial Services',
-      link: 'https://to.indeed.com/aat4xtzvd6dx',
-      notes: "Cabinet spécialisé banque/assurance. Rôle d'intégration IT (type Salesforce/SAP) appliqué au secteur financier, à l'intersection business/IT."
+      position: 'Functional Analyst | Insurance & Digital Channels',
+      link: 'https://to.indeed.com/aavyv7tqtkht',
+      notes: "Cabinet spécialisé banque/assurance. Rôle d'analyste fonctionnel sur les canaux digitaux en assurance, à l'intersection business/IT — proche de l'exercice de traduction besoins métier → spécifications techniques."
     },
     {
       key: 'engie-project-portfolio-manager-2026',
@@ -399,11 +441,11 @@
       notes: "Grand groupe énergétique avec une forte dimension transition énergétique. Gestion de portefeuille de projets à impact, dans la lignée d'un intérêt pour les projets à impact positif (ex: bornes de recharge)."
     },
     {
-      key: 'eaton-ev-charging-program-manager-emea-2026',
+      key: 'eaton-ev-charging-program-manager-emea-2026-2',
       company: 'Eaton',
       position: 'Program Manager, EV Charging Infrastructure & Energy Transition (EMEA)',
       link: 'https://to.indeed.com/aajywqccn64g',
-      notes: "Programme manager sur les infrastructures de recharge électrique et la transition énergétique à l'échelle EMEA. Correspond directement au type de poste \"impact positif\" visé (bornes de recharge), avec une dimension coordination multi-pays plutôt que purement technique."
+      notes: "Programme manager sur les infrastructures de recharge électrique et la transition énergétique à l'échelle EMEA. Correspond directement au type de poste \"impact positif\" visé (bornes de recharge), avec une dimension coordination multi-pays plutôt que purement technique. 📍 Localisation précise non communiquée (poste à portée EMEA) — à vérifier si basé à Bruxelles intramuros."
     },
     {
       key: 'climate-catalyst-programme-manager-europe-2026',
@@ -413,18 +455,25 @@
       notes: "Poste fully remote (Europe), fort impact positif (gouvernance climat/IA). Attention : orienté policy/advocacy EU plutôt que gestion de projet business/IT classique, à valider si ce type de virage t'intéresse."
     },
     {
-      key: 'green-recruitment-solar-projects-pm-2026',
+      key: 'green-recruitment-solar-projects-pm-2026-2',
       company: 'The Green Recruitment Company',
       position: 'Project Manager Large Solar Projects',
-      link: 'https://to.indeed.com/aaq2rmzjpqmz',
-      notes: "PM sur des projets solaires de grande envergure. Impact positif fort, mais probablement plus orienté ingénierie/construction que ton profil business/IT — à vérifier si le poste a un volet coordination/gestion transverse."
+      link: 'https://to.indeed.com/aax9mmngkpft',
+      notes: "PM sur des projets solaires de grande envergure. Impact positif fort, mais probablement plus orienté ingénierie/construction que ton profil business/IT — à vérifier si le poste a un volet coordination/gestion transverse. 📍 Hors Bruxelles intramuros (Flandre orientale)."
     },
     {
-      key: 'green-recruitment-hybrid-energy-pm-2026',
+      key: 'green-recruitment-hybrid-energy-pm-2026-2',
       company: 'The Green Recruitment Company',
       position: 'Project Manager – Hybrid Energy Solutions (BESS & EMS)',
-      link: 'https://to.indeed.com/aagyvsxlrzv4',
+      link: 'https://to.indeed.com/aavn4lnp6s6j',
       notes: "PM sur des solutions de stockage d'énergie hybrides (BESS/EMS) à Bruxelles. Secteur énergie/transition — à valider le niveau de technicité requis par rapport à un profil business/IT."
+    },
+    {
+      key: 'turning-point-senior-project-manager-remote-uk-2026',
+      company: 'Turning Point',
+      position: 'Senior Project Manager (Portfolio & Transformation Delivery)',
+      link: 'https://to.indeed.com/aanq7l7j6ldx',
+      notes: "Poste remote basé au Royaume-Uni, chez une association de santé/social à impact positif. Pilotage de projets de transformation business/tech transverses, très proche de ton positionnement. ⚠️ Déplacements ponctuels au Royaume-Uni prévus (Londres, Manchester) — à valider la faisabilité depuis la Belgique (statut, fiscalité, visa)."
     }
   ];
 
@@ -460,7 +509,11 @@
   }
 
   function saveApplications(applications) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(applications));
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(applications));
+    } catch (e) {
+      alert("Stockage local plein : impossible de sauvegarder. Essaie de retirer d'anciens fichiers CV/lettres de motivation pour libérer de la place.");
+    }
   }
 
   function loadFilters() {
@@ -525,6 +578,24 @@
     return div.innerHTML;
   }
 
+  function renderFileCell(app, field) {
+    const file = app[field];
+    if (file && file.dataUrl) {
+      return `
+        <div class="file-attached">
+          <a href="${file.dataUrl}" target="_blank" rel="noopener noreferrer" class="file-link" title="${escapeHtml(file.name)}">📎 ${escapeHtml(file.name)}</a>
+          <button class="btn-remove-file" data-id="${app.id}" data-field="${field}" title="Retirer le fichier">✕</button>
+        </div>
+      `;
+    }
+    return `
+      <label class="file-upload-label">
+        + Ajouter
+        <input type="file" class="file-input" data-id="${app.id}" data-field="${field}" accept=".pdf,.doc,.docx" hidden>
+      </label>
+    `;
+  }
+
   function render() {
     const applications = loadApplications();
     const filters = loadFilters();
@@ -552,6 +623,8 @@
         </td>
         <td><input type="date" id="new-date" class="date-input"></td>
         <td><textarea id="new-notes" class="notes-input" rows="2" placeholder="Notes"></textarea></td>
+        <td class="file-cell"></td>
+        <td class="file-cell"></td>
         <td><button id="add-application-btn" class="btn-add-row">Ajouter</button></td>
       </tr>
     `;
@@ -587,6 +660,8 @@
           </td>
           <td><input type="date" class="date-input" data-id="${app.id}" value="${app.date || ''}"></td>
           <td class="notes-cell"><textarea class="notes-input" data-id="${app.id}" rows="2" placeholder="Ajouter une note...">${escapeHtml(app.notes || '')}</textarea></td>
+          <td class="file-cell">${renderFileCell(app, 'cv')}</td>
+          <td class="file-cell">${renderFileCell(app, 'coverLetter')}</td>
           <td><button class="btn-danger" data-id="${app.id}">Supprimer</button></td>
         `;
         tbody.appendChild(tr);
@@ -691,6 +766,31 @@
     const id = e.target.dataset.id;
     if (!id) return;
 
+    if (e.target.classList.contains('file-input')) {
+      const field = e.target.dataset.field;
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const MAX_FILE_SIZE = 5 * 1024 * 1024;
+      if (file.size > MAX_FILE_SIZE) {
+        alert('Fichier trop volumineux (5 Mo max).');
+        e.target.value = '';
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        const applications = loadApplications();
+        const app = applications.find((a) => a.id === id);
+        if (!app) return;
+        app[field] = { name: file.name, dataUrl: reader.result };
+        saveApplications(applications);
+        render();
+      };
+      reader.readAsDataURL(file);
+      return;
+    }
+
     const applications = loadApplications();
     const app = applications.find((a) => a.id === id);
     if (!app) return;
@@ -712,6 +812,18 @@
   tbody.addEventListener('click', (e) => {
     if (e.target.id === 'add-application-btn') {
       addApplicationFromRow();
+      return;
+    }
+
+    if (e.target.classList.contains('btn-remove-file')) {
+      const id = e.target.dataset.id;
+      const field = e.target.dataset.field;
+      const applications = loadApplications();
+      const app = applications.find((a) => a.id === id);
+      if (!app) return;
+      delete app[field];
+      saveApplications(applications);
+      render();
       return;
     }
 
