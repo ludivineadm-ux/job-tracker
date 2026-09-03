@@ -525,6 +525,14 @@
     return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
   }
 
+  // Native date inputs can commit a value with a partially-typed year (e.g. "0002-09-10")
+  // if the user tabs away before finishing all 4 digits. Treat those as not-yet-entered.
+  function sanitizeDate(value) {
+    if (!value) return '';
+    const year = parseInt(value.slice(0, 4), 10);
+    return year >= 1900 ? value : '';
+  }
+
   function loadApplications() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -761,7 +769,7 @@
     }
 
     const status = document.getElementById('new-status').value;
-    const date = document.getElementById('new-date').value;
+    const date = sanitizeDate(document.getElementById('new-date').value);
     const notes = document.getElementById('new-notes').value.trim();
 
     const applications = loadApplications();
@@ -848,7 +856,12 @@
     if (e.target.classList.contains('status-select')) {
       app.status = e.target.value;
     } else if (e.target.classList.contains('date-input')) {
-      app.date = e.target.value;
+      const sanitized = sanitizeDate(e.target.value);
+      if (sanitized !== e.target.value) {
+        render();
+        return;
+      }
+      app.date = sanitized;
     } else if (e.target.classList.contains('notes-input')) {
       app.notes = e.target.value.trim();
     } else {
