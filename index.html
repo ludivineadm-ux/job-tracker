@@ -611,7 +611,7 @@
       sector: 'Gestionnaire du réseau électrique belge',
       position: 'Program Management Officer',
       link: 'https://to.indeed.com/aadjmgvdbrzg',
-      notes: "Deuxième poste chez Elia (gestionnaire réseau électrique, transition énergétique) — cette fois plus orienté pilotage de portefeuille de projets que business analysis."
+      notes: "Deuxième poste chez Elia (gestionnaire réseau électrique, transition énergétique) — cette fois plus orienté pilotage de portefeuille de projets que business analysis. ⚠️ Néerlandais ET anglais courants exigés (français en connaissance professionnelle seulement) — écart réel avec un niveau néerlandais basique."
     },
     {
       key: 'stellantis-vie-chef-de-projet-it-digital-2026',
@@ -777,10 +777,18 @@
     let changed = false;
 
     suggestions.forEach((sug) => {
-      if (sug.sector || !sug.link) return;
+      if (!sug.link) return;
       const match = AUTO_SUGGESTIONS.find((item) => item.link === sug.link);
-      if (match && match.sector) {
+      if (!match) return;
+
+      if (!sug.sector && match.sector) {
         sug.sector = match.sector;
+        changed = true;
+      }
+      // Notes aren't user-editable on suggestions, so it's always safe to sync them
+      // from the source of truth (e.g. a caveat added after the row was first seeded).
+      if (match.notes && sug.notes !== match.notes) {
+        sug.notes = match.notes;
         changed = true;
       }
     });
